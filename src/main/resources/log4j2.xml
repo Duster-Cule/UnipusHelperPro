@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <!-- 仅在控制台显示 ERROR 及以上 -->
+            <ThresholdFilter level="error" onMatch="ACCEPT" onMismatch="DENY"/>
+            <!-- Pattern 说明：
+                 %d{ISO8601}   -> 时间（ISO8601）
+                 [%t]          -> 线程名
+                 %-5level      -> 日志级别（左对齐宽度5）
+                 [%X{taskId}]  -> ThreadContext 中的 taskId（如果不存在显示为空）
+                 - %msg%n      -> 日志消息与换行
+            -->
+            <PatternLayout pattern="%d{DEFAULT} [%t] %-5level %notEmpty{[%X{taskId}]} : %msg%n%throwable"/>
+        </Console>
+
+        <!-- 文件记录所有级别（由 Root:DEBUG 控制） -->
+        <RollingFile name="File" fileName="logs/latest.log" filePattern="logs/app-%d{yyyy-MM-dd}-%i.log.gz" createOnDemand="true">
+            <PatternLayout pattern="%d{ISO8601} [%t] %-5level %logger{1} %notEmpty{[%X{taskId}]} : %msg%n%throwable"/>
+            <Policies>
+                <!-- 每次应用启动时切换到新文件 -->
+                <OnStartupTriggeringPolicy/>
+                <!-- 单个文件达到一定大小时再分割 -->
+                <SizeBasedTriggeringPolicy size="10MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="10"/>
+        </RollingFile>
+
+    </Appenders>
+
+    <Loggers>
+        <!-- Root 设为 TRACE：
+             - LogPanel 的程序化 Appender（SwingBroadcastAppender）挂在 Root 上，可收到所有级别
+             - File 也会记录所有级别
+             - Console 通过阈值过滤器限制为 ERROR+ 输出
+        -->
+        <Root level="trace">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="File"/>
+        </Root>
+    </Loggers>
+</Configuration>
