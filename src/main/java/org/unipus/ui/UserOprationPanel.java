@@ -1,5 +1,7 @@
 package org.unipus.ui;
 
+/* (っ*´Д`)っ 小代码要被看光啦 */
+
 import org.unipus.web.response.CourseListResponse;
 
 import javax.swing.*;

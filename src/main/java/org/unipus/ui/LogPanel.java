@@ -1,5 +1,7 @@
 package org.unipus.ui;
 
+/* (っ*´Д`)っ 小代码要被看光啦 */
+
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.LogEvent;
 import org.unipus.log.LogCapture;
@@ -24,14 +26,9 @@ import java.util.regex.PatternSyntaxException;
 
 /**
  * 日志面板：展示 log4j2 输出，支持过滤、导出、自动滚动、统计计数。
- * 该面板通过程序化注册的 Appender 订阅日志事件，不需要在 log4j2.xml 中额外配置。
+ * 该面板通过订阅 BroadcastAppender 来接收日志事件，需要在 log4j2.xml 中配置该 Appender。
  */
 public class LogPanel extends JPanel {
-
-    // 提供一个公共方法，允许在程序启动时安装日志捕获（并记录历史）
-    public static void ensureGlobalLogCapture() {
-        LogCapture.install();
-    }
 
     // 列定义
     private static final String[] COLS = {"时间", "级别", "线程", "记录器", "消息"};
@@ -158,13 +155,6 @@ public class LogPanel extends JPanel {
         add(new JScrollPane(table), BorderLayout.CENTER);
         add(statsBar, BorderLayout.SOUTH);
 
-        // 确保捕获器已安装，并加载历史
-        LogCapture.install();
-        java.util.List<LogEvent> history = LogCapture.snapshotHistory();
-        for (LogEvent ev : history) {
-            // 这里 onLogEvent 是在 UI 线程上调用的，但对于初始加载，直接在当前线程处理更快
-            addLogRow(createLogRow(ev));
-        }
 
         // 默认勾选（不包含 TRACE）
         selectedLevels.clear();

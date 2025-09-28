@@ -1,5 +1,7 @@
 package org.unipus.web.response;
 
+/* (っ*´Д`)っ 小代码要被看光啦 */
+
 public class AllTaskofCourseResponse extends Response {
     private int code;
     private String course;

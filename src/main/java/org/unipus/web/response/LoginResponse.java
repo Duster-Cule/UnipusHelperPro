@@ -1,5 +1,7 @@
 package org.unipus.web.response;
 
+/* (っ*´Д`)っ 小代码要被看光啦 */
+
 import com.google.gson.annotations.SerializedName;
 import org.jetbrains.annotations.Nullable;
 

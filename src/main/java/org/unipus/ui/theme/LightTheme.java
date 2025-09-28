@@ -1,5 +1,7 @@
 package org.unipus.ui.theme;
 
+/* (っ*´Д`)っ 小代码要被看光啦 */
+
 import com.formdev.flatlaf.FlatLightLaf;
 import javax.swing.plaf.FontUIResource;
 import javax.swing.UIDefaults;

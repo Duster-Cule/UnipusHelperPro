@@ -1,5 +1,7 @@
 package org.unipus.util;
 
+/* (っ*´Д`)っ 小代码要被看光啦 */
+
 import com.google.gson.*;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;

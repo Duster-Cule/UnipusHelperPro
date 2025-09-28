@@ -1,5 +1,7 @@
 package org.unipus.ui;
 
+/* (っ*´Д`)っ 小代码要被看光啦 */
+
 import com.formdev.flatlaf.*;
 import org.unipus.ui.theme.*;
 
@@ -40,9 +42,6 @@ public class MainGUI {
     }
 
     private MainGUI() {
-        // 确保日志从程序启动起就捕获（全局 Appender + 历史缓冲）
-        LogPanel.ensureGlobalLogCapture();
-
         setup(LIGHT_THEME);
 
         SwingUtilities.invokeLater(() -> {
