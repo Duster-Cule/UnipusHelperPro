@@ -24,6 +24,19 @@ public class UnipusRequest {
 
     private static final Logger LOGGER = LogManager.getLogger(UnipusRequest.class);
 
+    private static final String scheme = "https";
+    private static final String mainHost = "uai.unipus.cn";
+    private static final String ssoHost = "sso.unipus.cn";
+    private static final String contentHost = "ucontent.unipus.cn";
+    private static final int port = 443;
+
+    //For Debugging
+//    private static final String scheme = "http";
+//    private static final String mainHost = "localhost";
+//    private static final String ssoHost = "localhost";
+//    private static final String contentHost = "localhost";
+//    private static final int port = 3399;
+
     private String taskId;
     private OkHttpClient client;
     private final PersistentCookieJar cookieJar;
@@ -149,12 +162,19 @@ public class UnipusRequest {
         json.addProperty("service", "https://uai.unipus.cn/home");
         String jsonString = gson.toJson(json);
 
+        HttpUrl url = new HttpUrl.Builder()
+                .scheme(scheme)
+                .host(ssoHost)
+                .port(port)
+                .addPathSegments("sso/0.1/sso/login")
+                .build();
+
         RequestBody body = RequestBody.create(
                 jsonString,
                 MediaType.parse("application/json; charset=utf-8")
         );
         Request request = new Request.Builder()
-                .url("https://sso.unipus.cn/sso/0.1/sso/login")
+                .url(url)
                 .post(body)
                 .header("User-Agent", userAgent)
                 .header("Connection", "keep-alive")
@@ -195,8 +215,15 @@ public class UnipusRequest {
     public Response getUserInfo(@Nullable String authorization) {
         LOGGER.debug("Fetching user info.");
 
+        HttpUrl url = new HttpUrl.Builder()
+                .scheme(scheme)
+                .host(mainHost)
+                .port(port)
+                .addPathSegments("api/account/user/info")
+                .build();
+
         Request request = new Request.Builder()
-                .url("https://uai.unipus.cn/api/account/user/info")
+                .url(url)
                 .get()
                 .header("Authorization", authorization == null ? "" : authorization)
                 .header("User-Agent", userAgent)
@@ -263,8 +290,15 @@ public class UnipusRequest {
     public Response getCourseList(@Nullable String authorization) {
         LOGGER.debug("Fetching course list.");
 
+        HttpUrl url = new HttpUrl.Builder()
+                .scheme(scheme)
+                .host(mainHost)
+                .port(port)
+                .addPathSegments("api/cmgt/course/getCourseListByStudent")
+                .build();
+
         Request request = new Request.Builder()
-                .url("https://uai.unipus.cn/api/cmgt/course/getCourseListByStudent")
+                .url(url)
                 .get()
                 .header("Authorization", authorization == null ? "" : authorization)
                 .header("User-Agent", userAgent)
@@ -333,8 +367,9 @@ public class UnipusRequest {
         LOGGER.debug("Fetching task time info.");
 
         HttpUrl url = new HttpUrl.Builder()
-                .scheme("https")
-                .host("ucontent.unipus.cn")
+                .scheme(scheme)
+                .host(contentHost)
+                .port(port)
                 .addPathSegments("course/api/v2/course_progress/")
                 .addPathSegments(courseInstanceId)
                 .addPathSegments(unitNodeId)
@@ -449,8 +484,15 @@ public class UnipusRequest {
                 MediaType.parse("application/json; charset=utf-8")
         );
 
+        HttpUrl url = new HttpUrl.Builder()
+                .scheme(scheme)
+                .host(mainHost)
+                .port(port)
+                .addPathSegments("api/tla/courseStudyStrategy/detail")
+                .build();
+
         Request request = new Request.Builder()
-                .url("https://uai.unipus.cn/api/tla/courseStudyStrategy/detail")
+                .url(url)
                 .post(body)
                 .header("Authorization", authorization == null ? "" : authorization)
                 .header("User-Agent", userAgent)
@@ -515,8 +557,9 @@ public class UnipusRequest {
         LOGGER.debug("Fetching course resource info by ID.");
 
         HttpUrl url = new HttpUrl.Builder()
-                .scheme("https")
-                .host("uai.unipus.cn")
+                .scheme(scheme)
+                .host(mainHost)
+                .port(port)
                 .addPathSegments("api/cmgt/course/getCourseResourceInfoById/")
                 .addPathSegments(courseResourceId)
                 .build();
@@ -550,8 +593,9 @@ public class UnipusRequest {
         LOGGER.debug("Fetching all tasks of course.");
 
         HttpUrl url = new HttpUrl.Builder()
-                .scheme("https")
-                .host("ucontent.unipus.cn")
+                .scheme(scheme)
+                .host(contentHost)
+                .port(port)
                 .addPathSegments("course/api/course/")
                 .addPathSegments(courseInstanceId)
                 .addPathSegments("default")
@@ -597,8 +641,9 @@ public class UnipusRequest {
         String token = WebUtils.generateAuthToken(openid);
 
         HttpUrl url = new HttpUrl.Builder()
-                .scheme("https")
-                .host("ucontent.unipus.cn")
+                .scheme(scheme)
+                .host(contentHost)
+                .port(port)
                 .addPathSegments("course/api/v3/answer")
                 .addPathSegments(courseInstanceId)
                 .addPathSegments(taskId)
@@ -668,8 +713,9 @@ public class UnipusRequest {
         LOGGER.debug("Fetching progress of studying");
 
         HttpUrl url = new HttpUrl.Builder()
-                .scheme("https")
-                .host("uai.unipus.cn")
+                .scheme(scheme)
+                .host(mainHost)
+                .port(port)
                 .addPathSegments("api/tla/learningDetail/studyRecord/totalAndUnitSituation")
                 .addQueryParameter("id", String.valueOf(id))
                 .addQueryParameter("appUserId", appUserId)
@@ -765,8 +811,9 @@ public class UnipusRequest {
         LOGGER.debug("Fetching task situation of unit {}", nodeId);
 
         HttpUrl url = new HttpUrl.Builder()
-                .scheme("https")
-                .host("uai.unipus.cn")
+                .scheme(scheme)
+                .host(mainHost)
+                .port(port)
                 .addPathSegments("api/tla/learningDetail/studyRecord/unitTaskSituation")
                 .addQueryParameter("nodeId", nodeId)
                 .addQueryParameter("id", String.valueOf(id))
@@ -805,8 +852,15 @@ public class UnipusRequest {
                 MediaType.parse("application/json; charset=utf-8")
         );
 
+        HttpUrl url = new HttpUrl.Builder()
+                .scheme(scheme)
+                .host(contentHost)
+                .port(port)
+                .addPathSegments("course/api/v3/newExploration/submit")
+                .build();
+
         Request request = new Request.Builder()
-                .url("https://ucontent.unipus.cn/course/api/v3/newExploration/submit")
+                .url(url)
                 .post(requestBody)
                 .header("User-Agent", userAgent)
                 .header("Connection", "keep-alive")
@@ -920,8 +974,9 @@ public class UnipusRequest {
         String token = WebUtils.generateAuthToken(openId);
 
         HttpUrl url = new HttpUrl.Builder()
-                .scheme("https")
-                .host("ucontent.unipus.cn")
+                .scheme(scheme)
+                .host(contentHost)
+                .port(port)
                 .addPathSegments("api/mobile/user_module/")
                 .addPathSegments(courseInstanceId)
                 .addPathSegments(taskId + "-" + version)

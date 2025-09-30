@@ -3,13 +3,14 @@ package org.unipus.ui;
 /* (っ*´Д`)っ 小代码要被看光啦 */
 
 import org.unipus.unipus.Task;
-import org.unipus.unipus.TaskManager;
 
 import javax.swing.*;
 import javax.swing.border.AbstractBorder;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 public class TaskPanel extends JPanel {
 
@@ -109,18 +110,43 @@ public class TaskPanel extends JPanel {
         Task.Status s = task.getStatus();
         statusLabel.setText(s.name());
         statusLabel.setForeground(statusColor(s));
+
+        // 清除之前的MouseListener，防止重复添加
+        for (var listener : statusLabel.getMouseListeners()) {
+            statusLabel.removeMouseListener(listener);
+        }
+        statusLabel.setCursor(Cursor.getDefaultCursor());
+
         if (s == Task.Status.NEED_OPERATION) {
             statusLabel.setText("<html><u>需要操作</u></html>");
             statusLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
             UserOprationPanel userOprationPanel = new UserOprationPanel();
 
             switch (task.getUserOpration()) {
-                case CHOOSE_COURSE ->
-                        userOprationPanel.initChooseCoursePanel(task.getCourseList(), (course, resource) -> {
-                            task.setCurrentCourse(course);
-                            task.setCurrentCourseResource(resource);
-                            task.resumeTask();
-                        });
+                case CHOOSE_COURSE -> {
+                    userOprationPanel.initChooseCoursePanel(task.getCourseList(), (course, resource) -> {
+                        task.setCurrentCourse(course);
+                        task.setCurrentCourseResource(resource);
+                        task.resumeTask();
+                        Window window = SwingUtilities.getWindowAncestor(userOprationPanel);
+                        if (window instanceof JDialog) {
+                            window.dispose();
+                        }
+                    });
+
+                    statusLabel.addMouseListener(new MouseAdapter() {
+                        @Override
+                        public void mouseClicked(MouseEvent e) {
+                            JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(TaskPanel.this), "选择课程与教程", true);
+                            dialog.getContentPane().add(userOprationPanel);
+
+                            dialog.pack();
+                            dialog.setResizable(false);
+                            dialog.setLocationRelativeTo(TaskPanel.this);
+                            dialog.setVisible(true);
+                        }
+                    });
+                }
             }
         }
 

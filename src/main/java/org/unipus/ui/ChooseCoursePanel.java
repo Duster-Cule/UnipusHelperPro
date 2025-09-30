@@ -14,6 +14,7 @@ public class ChooseCoursePanel extends JPanel {
     private final JList<CourseResource> resourceList;
     private final DefaultListModel<CourseResource> resourceListModel;
     private final JButton confirmButton;
+    private final JSplitPane splitPane;
     private Course selectedCourse;
     private CourseResource selectedResource;
 
@@ -44,12 +45,23 @@ public class ChooseCoursePanel extends JPanel {
             }
         });
 
+        // 先创建 splitPane
+        splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
+                new JScrollPane(courseList), new JScrollPane(resourceList));
+        splitPane.setDividerLocation(200);
+        splitPane.setResizeWeight(0.6);
+
         courseList.addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 selectedCourse = courseList.getSelectedValue();
                 resourceListModel.clear();
                 if (selectedCourse != null && selectedCourse.getCourseResourceList() != null) {
                     for (CourseResource r : selectedCourse.getCourseResourceList()) resourceListModel.addElement(r);
+                    // 选择课程后调整分割比例，让右侧资源列表占据更多空间
+                    SwingUtilities.invokeLater(() -> {
+                        splitPane.setDividerLocation(75); // 减小左侧宽度
+                        splitPane.setResizeWeight(0.15);   // 左侧占15%
+                    });
                 }
             }
         });
@@ -69,9 +81,6 @@ public class ChooseCoursePanel extends JPanel {
             }
         });
 
-        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
-                new JScrollPane(courseList), new JScrollPane(resourceList));
-        splitPane.setDividerLocation(200);
         add(splitPane, BorderLayout.CENTER);
         add(confirmButton, BorderLayout.SOUTH);
     }
