@@ -10,7 +10,7 @@
 
 **多任务题目**指题目不在同一页面，需要点击“下一题”而不是直接提交的题目，如下图所示：
 
-![image](\doc\images\multipleQuestionTaskDemoImage.png)
+![image](/doc/images/multipleQuestionTaskDemoImage.png)
 
 如果你有这类题目的话，请按照以下步骤操作：
 
@@ -18,7 +18,7 @@
 
 随后点击 **Network** 或 **网络** 选项卡，如图所示
 
-![image](\doc\images\DevToolsNetworkDemo.png)
+![image](/doc/images/DevToolsNetworkDemo.png)
 
 如果因为窗口太窄而找不到选项卡，请点击 ① 处的按钮，找到 **Network** 或 **网络** 并点击进入。
 
@@ -29,6 +29,6 @@
 3. 右键根目录，选择 **Copy Object** 或 **复制对象**。
 4. 将你答题的每一页截图（填入答案后）和剪贴板中的文本提交到[Contributions讨论区](https://github.com/Duster-Cule/UnipusHelperPro/discussions/categories/contributions)。
 
-![image](\doc\images\DevToolsNetworkDemo2.png)
+![image](/doc/images/DevToolsNetworkDemo2.png)
 
 **感谢您的贡献！**
