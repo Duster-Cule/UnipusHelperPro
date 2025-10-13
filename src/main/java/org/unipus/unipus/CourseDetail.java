@@ -36,9 +36,6 @@ public class CourseDetail {
     private Map<String, Node> nodeIndex;
     private String name;
     private String type;
-    private int courseType;
-    private String seriesTemplate;
-    private String platform;
     private Map<String, Long> taskStartTimes = new HashMap<>();
     private Map<String, Long> taskEndTimes = new HashMap<>();
 
@@ -50,9 +47,6 @@ public class CourseDetail {
         JsonElement root = JsonParser.parseString(courseJSON);
         courseDetail.name = root.getAsJsonObject().get("name").getAsString();
         courseDetail.type = root.getAsJsonObject().get("type").getAsString();
-        courseDetail.courseType = root.getAsJsonObject().get("courseType").getAsInt();
-        courseDetail.seriesTemplate = root.getAsJsonObject().get("seriesTemplate").getAsString();
-        courseDetail.platform = root.getAsJsonObject().get("platform").getAsString();
         List<Node> units = new ArrayList<>();
         courseDetail.units = units;
         courseDetail.nodeIndex = new HashMap<>(); // 初始化索引
@@ -111,8 +105,8 @@ public class CourseDetail {
 
         leafs.keySet().forEach(nodeId -> {
             JsonObject strategies = leafs.get(nodeId).getAsJsonObject().get("strategies").getAsJsonObject();
-            taskStartTimes.put(nodeId, strategies.get("start_time").getAsLong());
-            taskEndTimes.put(nodeId, strategies.get("end_time").getAsLong());
+            taskStartTimes.put(nodeId, strategies.has("start_time") ? strategies.get("start_time").getAsLong() : 0L);
+            taskEndTimes.put(nodeId, strategies.has("end_time") ? strategies.get("end_time").getAsLong() : 32503651200L);
         });
         return true;
     }
@@ -187,18 +181,6 @@ public class CourseDetail {
 
     public String getType() {
         return type;
-    }
-
-    public int getCourseType() {
-        return courseType;
-    }
-
-    public String getSeriesTemplate() {
-        return seriesTemplate;
-    }
-
-    public String getPlatform() {
-        return platform;
     }
 
     public static class Node {

@@ -262,6 +262,12 @@ public class Learn {
             return false;
         }
 
+        //TODO:后续支持：多题目作答，目前样本太少
+        //跳过多题目
+        if (questionTypes.size() != 1) {
+            return false;
+        }
+
         List<CourseDetail.Node.BaseType> typesNeedSkip = List.of(DISCUSSION, MULTI_FILE_UPLOAD, EXIT_TICKET, MULTICHOICE, UNKNOWN);
 
         if (!Collections.disjoint(questionTypes, typesNeedSkip)) {
@@ -425,7 +431,6 @@ public class Learn {
         for (CourseListResponse.Course course : courseListResponse.getValue().getCourseList()) {
             for (CourseListResponse.CourseResource courseResource : course.getCourseResourceList()) {
                 if (courseResource.equals(task.getCurrentCourseResource())) {
-                    // Fix: update UI by TaskManager task id, not the unit task node id
                     TaskManager.getInstance().updateTaskProgress(task.getTaskId(), courseResource.getFinishPointNum(), courseResource.getTotalPointNum());
                     logger.debug("Updated task progress: {}/{}", courseResource.getFinishPointNum(), courseResource.getTotalPointNum());
                     progressUpdated = true;
