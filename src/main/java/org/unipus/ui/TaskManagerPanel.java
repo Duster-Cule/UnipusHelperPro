@@ -112,6 +112,18 @@ public class TaskManagerPanel extends JPanel {
                     } catch (Exception ignored) {}
                 });
             }
+
+            @Override
+            public void onWarningOccurred(String taskId, String warning) {
+                SwingUtilities.invokeLater(() -> {
+                    try {
+                        String title = "警告";
+                        String sb = "任务 " + taskId + " 发生意料外的情况：\n" +
+                                warning;
+                        JOptionPane.showMessageDialog(null, sb, title, JOptionPane.WARNING_MESSAGE);
+                    } catch (Exception ignored) {}
+                });
+            }
         });
 
         // 初始化时把已存在的任务加入面板
@@ -353,6 +365,10 @@ public class TaskManagerPanel extends JPanel {
             }
             @Override
             public void onExceptionOccurred(String taskId, Throwable ex) {
+                if (task.getTaskId().equals(taskId)) SwingUtilities.invokeLater(refresh);
+            }
+            @Override
+            public void onWarningOccurred(String taskId, String ex) {
                 if (task.getTaskId().equals(taskId)) SwingUtilities.invokeLater(refresh);
             }
         };

@@ -4,6 +4,7 @@ package org.unipus.unipus;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.unipus.exceptions.CourseInstanceInitException;
 import org.unipus.exceptions.LoginException;
 import org.unipus.exceptions.TaskInitFailedException;
 
@@ -51,6 +52,7 @@ public class TaskManager {
         void onTaskUpdated(Task task);
         void onAllCleared();
         void onExceptionOccurred(String taskId, Throwable ex);
+        void onWarningOccurred(String taskId, String warning);
     }
 
     public void addListener(Listener l) {
@@ -154,6 +156,8 @@ public class TaskManager {
         Future<?> f = executor.submit(() -> {
             try {
                 t.run();
+            } catch (CourseInstanceInitException ex) {
+                unsupportedCourseException(taskId, ex);
             } catch (Throwable ex) {
                 handleUncaughtTaskException(taskId, ex);
             }
@@ -302,6 +306,41 @@ public class TaskManager {
             executor.shutdownNow();
         } catch (Exception ignored) {
         }
+    }
+
+    /**
+     * 弹窗通知任务警告信息。
+     * @param taskId taskID
+     * @param warning 警告信息
+     */
+    public void notifyWarning(String taskId, String warning) {
+        for (Listener l : listeners) {
+            try {
+                l.onWarningOccurred(taskId, warning);
+            } catch (Exception ignored) {}
+        }
+    }
+
+    public void unsupportedCourseException(String taskId, Exception e) {
+        String warning = """
+                        当前程序不支持你的教程，如果要获取支持，请按照以下步骤反馈：
+                        
+                        1. 点击 调试 -> 生成报告 导出报告文件
+                        2. 在Github Issues页面创建新的Issue，描述你遇到的问题，包括日志报错信息和你的教程信息。
+                        3. 将导出的报告文件发送到邮箱 1362105606@qq.com，请在邮件正文中注明 Issue 编号，比如 #114514。
+                        
+                        注意：虽然导出的报告文件已经过滤掉绝大多数你的隐私信息，但仍然不保证有其他方式可以还原出你的隐私信息，所以尽量不要在 Github Issues 附件中上传。
+                        """
+                + "---------------------\n具体异常信息：\n" + e.getMessage();
+        Task t = tasks.get(taskId);
+        if (t != null) {
+            try {
+                t.setStatus(Task.Status.ERROR);
+                t.setProcessDescription("不支持的教程类型");
+                stopTask(taskId);
+            } catch (Exception ignored) {}
+        }
+        notifyWarning(taskId, warning);
     }
 
     /**

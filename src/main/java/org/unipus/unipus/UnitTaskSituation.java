@@ -7,6 +7,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import okhttp3.Response;
+import org.unipus.util.JSONParsing;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -114,9 +115,9 @@ public class UnitTaskSituation {
         JsonObject root = JsonParser.parseString(json).getAsJsonObject();
         UnitTaskSituation resp = new UnitTaskSituation();
 
-        if (root.has("code")) resp.code = safeGetInt(root, "code", 0);
-        if (root.has("msg")) resp.msg = safeGetString(root, "msg", null);
-        if (root.has("success")) resp.success = safeGetBoolean(root, "success", false);
+        if (root.has("code")) resp.code = JSONParsing.safeGetInt(root, "code", 0);
+        if (root.has("msg")) resp.msg = JSONParsing.safeGetString(root, "msg", "");
+        if (root.has("success")) resp.success = JSONParsing.safeGetBoolean(root, "success", false);
 
         if (root.has("value") && root.get("value").isJsonObject()) {
             JsonObject value = root.getAsJsonObject("value");
@@ -137,14 +138,14 @@ public class UnitTaskSituation {
     // 递归构建 Node
     private static Node parseNode(JsonObject obj) {
         Node n = new Node();
-        n.nodeId = safeGetString(obj, "nodeId", null);
-        n.caption = safeGetString(obj, "caption", null);
-        n.name = safeGetString(obj, "name", null);
-        n.path = safeGetString(obj, "path", null);
-        n.required = obj.has("required") ? safeGetBoolean(obj, "required", null) : null;
-        n.role = safeGetString(obj, "role", null);
+        n.nodeId = JSONParsing.safeGetString(obj, "nodeId", "");
+        n.caption = JSONParsing.safeGetString(obj, "caption", "");
+        n.name = JSONParsing.safeGetString(obj, "name", "");
+        n.path = JSONParsing.safeGetString(obj, "path", "");
+        n.required = obj.has("required") ? JSONParsing.safeGetBoolean(obj, "required", false) : false;
+        n.role = JSONParsing.safeGetString(obj, "role", "");
 
-        // 叶子上可选字段
+        // 可选字段
         if (obj.has("finishProgress") && obj.get("finishProgress").isJsonPrimitive()) {
             try { n.finishProgress = obj.get("finishProgress").getAsDouble(); } catch (Exception ignored) {}
         }
@@ -231,16 +232,5 @@ public class UnitTaskSituation {
                     ", children=" + (children == null ? 0 : children.size()) +
                     '}';
         }
-    }
-
-    // ============== 安全取值工具 ==============
-    private static String safeGetString(JsonObject o, String key, String def) {
-        try { return o.get(key).isJsonNull() ? def : o.get(key).getAsString(); } catch (Exception e) { return def; }
-    }
-    private static Integer safeGetInt(JsonObject o, String key, Integer def) {
-        try { return o.get(key).isJsonNull() ? def : o.get(key).getAsInt(); } catch (Exception e) { return def; }
-    }
-    private static Boolean safeGetBoolean(JsonObject o, String key, Boolean def) {
-        try { return o.get(key).isJsonNull() ? def : o.get(key).getAsBoolean(); } catch (Exception e) { return def; }
     }
 }

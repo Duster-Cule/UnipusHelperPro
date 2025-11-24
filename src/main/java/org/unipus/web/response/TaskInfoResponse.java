@@ -286,7 +286,7 @@ public class TaskInfoResponse extends Response {
         private boolean record_max_submit;
         private boolean required;
         private long startTime;
-        private int task_mini_score_pct;
+        private float task_mini_score_pct;
 
         public long getEndTime() {
             return endTime;
@@ -308,7 +308,7 @@ public class TaskInfoResponse extends Response {
             return startTime;
         }
 
-        public int getTask_mini_score_pct() {
+        public float getTask_mini_score_pct() {
             return task_mini_score_pct;
         }
     }

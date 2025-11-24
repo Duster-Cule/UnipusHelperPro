@@ -111,4 +111,11 @@ public class StringProcesser {
         return data;
     }
 
+    public static String safeReplaceAll(String text, String regex, String replacement) {
+        if (regex == null || regex.isEmpty() || regex.equals("()")) {
+            return text;
+        }
+        return text.replaceAll(regex, replacement);
+    }
+
 }

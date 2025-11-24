@@ -368,6 +368,36 @@ public final class RequestManager {
             );
         }
 
+        /**
+         * 用于 Reporter 生成报告（隐去了一些安全信息）
+         * @return 一个浅复制的 RequestRecord 副本
+         */
+        public RequestRecord copy() {
+            return new RequestRecord(
+                this.timestamp,
+                null,
+                this.requestUrl,
+                this.requestMethod,
+                this.statusCode,
+                this.statusText,
+                this.remoteAddress,
+                this.localAddress,
+                this.referrerPolicy,
+                this.protocol,
+                null,
+                new LinkedHashMap<>(this.responseHeaders),
+                this.requestPayload,
+                this.responseBody,
+                this.requestSize,
+                this.responseSize,
+                null,
+                null,
+                null,
+                this.durationMs,
+                this.error
+            );
+        }
+
         private static Map<String, List<String>> toHeaderMap(Headers headers) {
             Map<String, List<String>> map = new LinkedHashMap<>();
             for (String name : headers.names()) {

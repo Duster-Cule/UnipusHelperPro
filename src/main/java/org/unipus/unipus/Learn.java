@@ -201,9 +201,9 @@ public class Learn {
             throw new NetworkException("Get unit learning progress id failed: Please try again later.");
         }
 
-        UnitTaskSituation unitTaskSituation = UnitTaskSituation.parse(unitTaskSituationResponse);
+        unitProgress = UnitTaskSituation.parse(unitTaskSituationResponse);
         if (!checkpoint(task)) return false;
-        if (unitTaskSituation == null) {
+        if (unitProgress == null) {
             logger.error("Failed to get the learning progress of the task");
             task.setStatus(Task.Status.ERROR);
             task.setProcessDescription("获取单元学习进度失败，请检查网络连接然后重试");
@@ -220,7 +220,7 @@ public class Learn {
         //检查任务完成情况
         if (!checkpoint(task)) return false;
         List<String> needLearnTasks = unitRequiredTasks.stream()
-                .filter((taskId) -> unitTaskSituation.getNodeByNodeId(taskId).getFinishProgress() != 100.0)
+                .filter((taskId) -> unitProgress.getNodeByNodeId(taskId).getFinishProgress() != 100.0)
                 .toList();
         if (needLearnTasks.isEmpty()) {
             return false;
@@ -302,20 +302,25 @@ public class Learn {
             for (int i = 0; i < course.getNode(taskId).getQuestion_num(); i++) {
                 Answer answer = Answer.getInstanceByJSON(answerString, i);
                 CourseDetail.Node.BaseType questionType = course.getQuestionType(taskId, i);
-                switch (questionType) {
-                    case MATERIAL_BANKED_CLOZE, SINGLE_CHOICE, SEQUENCE, BASIC_SCOOP_CONTENT, TRANSLATION, VIDEO_POPUP:
-                        answer.getQuestionAnswers().getChildren().forEach(e -> answers0.add(e.getAnswer().getFirst()));
-                        break;
-                    case SHORT_ANSWER:
-                        answer.getQuestionAnalysis().getChildren().forEach(e -> answers0.add(e.getAnalysis()));
-                        break;
-                    case WRITING:
-                        answers0.add(answer.getQuestionAnalysis().getAnalysis());
-                        break;
-                    case RICH_TEXT_READ, TEXT_LEARN, VIDEO_POINT_READ, VOCABULARY, INPUT:
-                        break;
-                    default:
-                        throw new IllegalStateException("Unexpected enum value: " + questionType);
+                try {
+                    switch (questionType) {
+                        case MATERIAL_BANKED_CLOZE, SINGLE_CHOICE, SEQUENCE, BASIC_SCOOP_CONTENT, TRANSLATION,
+                             VIDEO_POPUP:
+                            answer.getQuestionAnswers().getChildren().forEach(e -> answers0.add(e.getAnswer().getFirst()));
+                            break;
+                        case SHORT_ANSWER:
+                            answer.getQuestionAnalysis().getChildren().forEach(e -> answers0.add(e.getAnalysis()));
+                            break;
+                        case WRITING:
+                            answers0.add(answer.getQuestionAnalysis().getAnalysis());
+                            break;
+                        case RICH_TEXT_READ, TEXT_LEARN, VIDEO_POINT_READ, VOCABULARY, INPUT:
+                            break;
+                        default:
+                            throw new IllegalStateException("Unexpected enum value: " + questionType);
+                    }
+                } catch (NullPointerException e) {
+                    logger.error("Something wrong when getting answer of task {} : {}, skipped, and you should report this to developer.", taskId, e.getMessage());
                 }
                 answers.add(answers0);
                 ids.add(answer.getId());

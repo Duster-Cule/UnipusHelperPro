@@ -2,27 +2,17 @@ package org.unipus.unipus;
 
 /* (っ*´Д`)っ 小代码要被看光啦 */
 
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.unipus.exceptions.CourseInstanceInitException;
 import org.unipus.exceptions.UnknownQuestionTypeException;
 
 import java.util.*;
+import java.util.function.Supplier;
 
 import static org.unipus.unipus.CourseDetail.Node.BaseType.*;
-import static org.unipus.unipus.CourseDetail.Node.BaseType.DISCUSSION;
-import static org.unipus.unipus.CourseDetail.Node.BaseType.INPUT;
-import static org.unipus.unipus.CourseDetail.Node.BaseType.MULTICHOICE;
-import static org.unipus.unipus.CourseDetail.Node.BaseType.RICH_TEXT_READ;
-import static org.unipus.unipus.CourseDetail.Node.BaseType.TEXT_LEARN;
-import static org.unipus.unipus.CourseDetail.Node.BaseType.UNKNOWN;
-import static org.unipus.unipus.CourseDetail.Node.BaseType.VIDEO_POINT_READ;
-import static org.unipus.unipus.CourseDetail.Node.BaseType.VIDEO_POPUP;
-import static org.unipus.unipus.CourseDetail.Node.BaseType.VOCABULARY;
+import static org.unipus.util.JSONParsing.*;
 
 public class CourseDetail {
 
@@ -32,7 +22,6 @@ public class CourseDetail {
 
     private static final Logger LOGGER = LogManager.getLogger(CourseDetail.class);
     private List<Node> units;
-    // 新增: 根据 id 快速获取节点
     private Map<String, Node> nodeIndex;
     private String name;
     private String type;
@@ -41,72 +30,78 @@ public class CourseDetail {
 
     private CourseDetail() {}
 
-    public static CourseDetail valueOf(String courseJSON) {
-        CourseDetail courseDetail = new CourseDetail();
-        Gson gson = new Gson();
-        JsonElement root = JsonParser.parseString(courseJSON);
-        courseDetail.name = root.getAsJsonObject().get("name").getAsString();
-        courseDetail.type = root.getAsJsonObject().get("type").getAsString();
-        List<Node> units = new ArrayList<>();
-        courseDetail.units = units;
-        courseDetail.nodeIndex = new HashMap<>(); // 初始化索引
-        for (JsonElement element : root.getAsJsonObject().get("units").getAsJsonArray()) {
-            Node node = new Node();
-            units.add(node);
-            traverse(node, element, gson, courseDetail.nodeIndex);
+    public static CourseDetail valueOf(String courseJSON) throws CourseInstanceInitException{
+        try {
+            CourseDetail courseDetail = new CourseDetail();
+            Gson gson = new Gson();
+            JsonElement root = JsonParser.parseString(courseJSON);
+            courseDetail.name = root.getAsJsonObject().get("name").getAsString();
+            courseDetail.name = safeGetString(root.getAsJsonObject(), "name", new CourseInstanceInitException("Course name not found in JSON"));
+            courseDetail.type = safeGetString(root.getAsJsonObject(), "type", "unknown");
+            List<Node> units = new ArrayList<>();
+            courseDetail.units = units;
+            courseDetail.nodeIndex = new HashMap<>(); // 初始化索引
+            for (JsonElement element : root.getAsJsonObject().get("units").getAsJsonArray()) {
+                Node node = new Node();
+                units.add(node);
+                traverse(node, element, gson, courseDetail.nodeIndex);
+            }
+            return courseDetail;
+        } catch (Throwable e){
+            LOGGER.error("Error while parsing CourseDetail JSON", e);
+            throw new CourseInstanceInitException("Failed to parse CourseDetail JSON", e);
         }
-        return courseDetail;
     }
 
     private static void traverse(Node node, JsonElement element, Gson gson, Map<String, Node> nodeIndex) {
         JsonObject jsonObject = element.getAsJsonObject();
-        node.id = jsonObject.get("id").getAsString();
-        node.role = Node.Role.valueOf(jsonObject.get("role").getAsString().toUpperCase());
-        node.caption = jsonObject.get("caption").getAsString();
-        node.name = jsonObject.get("name").getAsString();
+        node.id = safeGetString(jsonObject, "id", (Supplier<String>) () -> safeGetString(jsonObject, "url", new CourseInstanceInitException("Course id not found in JSON")));
+        node.role = Node.Role.fromString(safeGetString(jsonObject, "role", new CourseInstanceInitException("Course role not found in JSON")));
+        node.caption = safeGetString(jsonObject, "caption", "");
+        node.name = safeGetString(jsonObject, "name", "Unknown name");
         if(!(node.role == Node.Role.SECTION)) {
-            node.url = jsonObject.get("url").getAsString();
-            node.ref_out = jsonObject.get("ref-out").getAsString();
+            node.url = safeGetString(jsonObject, "url", "Unknown url");
+            node.ref_out = safeGetString(jsonObject, "ref-out", "Unknown ref-out");
         }
         // 记录索引
         nodeIndex.put(node.id, node);
         if(jsonObject.has("children")) {
             ArrayList<Node> children = new ArrayList<>();
             node.children = children;
-            for(JsonElement childNodeElement : jsonObject.get("children").getAsJsonArray()) {
+            for(JsonElement childNodeElement : safeGetJsonArray(jsonObject,"children", new JsonArray())) {
                 Node childNode = new Node();
                 children.add(childNode);
                 traverse(childNode, childNodeElement, gson, nodeIndex);
             }
         } else {
-            node.question_num = jsonObject.get("question_num").getAsInt();
-            node.bases = Arrays.stream(jsonObject.get("base").getAsString().split(","))
-                            .map(String::trim)
-                            .map(Node.BaseType::ofOrUnknown)
-                            .toList();
-            node.tab_type = jsonObject.get("tab_type").getAsString();
-            if (node.role == Node.Role.LINK) node.linkType = jsonObject.get("linkType").getAsString();
+            node.question_num = safeGetInt(jsonObject, "question_num", 0);
+            node.bases = Arrays.stream(safeGetString(jsonObject,"base","unknown").split(","))
+                    .map(String::trim)
+                    .map(Node.BaseType::ofOrUnknown)
+                    .toList();
+            node.tab_type = safeGetString(jsonObject, "tab_type", "unknown");
+            if (node.role == Node.Role.LINK) node.linkType = safeGetString(jsonObject, "linkType", "unknown");
         }
     }
 
     public boolean initTaskTimes(String taskTimesJSON) {
         JsonElement root = JsonParser.parseString(taskTimesJSON);
-        if (root.getAsJsonObject().has("code") && root.getAsJsonObject().get("code").getAsInt() != 0) {
+        if (root.getAsJsonObject().has("code") && safeGetInt(root.getAsJsonObject(), "code", new CourseInstanceInitException("Failed to initialize task times: code isn't exist in JSON")) != 0) {
             LOGGER.warn("Failed to initialize task times: code isn't 0 in JSON");
             return false;
         }
 
-        JsonObject rt = root.getAsJsonObject().get("rt").getAsJsonObject();
+        JsonObject rt = safeGetJsonObject(root.getAsJsonObject(), "rt", new CourseInstanceInitException("Failed to initialize task times : rt field not found in JSON"));
         if (!rt.has("leafs")) {
             LOGGER.warn("Failed to initialize task times: 'leafs' field not found in JSON");
             return false;
         }
-        JsonObject leafs = rt.get("leafs").getAsJsonObject();
 
+        JsonObject leafs = safeGetJsonObject(rt, "leafs", new CourseInstanceInitException("Failed to initialize task times : leafs field not found in JSON"));
         leafs.keySet().forEach(nodeId -> {
-            JsonObject strategies = leafs.get(nodeId).getAsJsonObject().get("strategies").getAsJsonObject();
-            taskStartTimes.put(nodeId, strategies.has("start_time") ? strategies.get("start_time").getAsLong() : 0L);
-            taskEndTimes.put(nodeId, strategies.has("end_time") ? strategies.get("end_time").getAsLong() : 32503651200L);
+            JsonObject strategies = safeGetJsonObject(leafs, nodeId, new CourseInstanceInitException("Failed to initialize task times : leafs node not found in JSON"));
+            taskStartTimes.put(nodeId, safeGetLong(strategies, "start_time", 0L));
+            taskEndTimes.put(nodeId, safeGetLong(strategies, "end_time", 32503651200L));
         });
         return true;
     }
@@ -209,6 +204,13 @@ public class CourseDetail {
             @Override
             public String toString() {
                 return this.name().toLowerCase();
+            }
+
+            public static Role fromString(String s) {
+                if (s == null || s.isEmpty()) {
+                    throw new IllegalArgumentException("Role string cannot be null or empty");
+                }
+                return valueOf(s.toUpperCase());
             }
         }
 

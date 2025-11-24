@@ -111,4 +111,17 @@ public final class BroadcastAppender extends AbstractAppender {
     public void removeListener(LogCapture.LogListener listener) {
         listeners.remove(listener);
     }
+
+    /**
+     * 获取所有历史日志的快照
+     * @return 历史日志列表的副本
+     */
+    public List<LogEvent> getAllLogs() {
+        lock.readLock().lock();
+        try {
+            return new ArrayList<>(history);
+        } finally {
+            lock.readLock().unlock();
+        }
+    }
 }

@@ -110,10 +110,14 @@ public class MainGUI {
         JMenu debugMenu = new JMenu("调试");
         JMenuItem logItem = new JMenuItem("日志 (F6)");
         JMenuItem netItem = new JMenuItem("网络 (F12)");
+        JMenuItem reportItem = new JMenuItem("生成报告");
         logItem.addActionListener(e -> showDebugWindow(0));
         netItem.addActionListener(e -> showDebugWindow(1));
+        reportItem.addActionListener(e -> ReportDialog.showReportDialog(frame));
         debugMenu.add(logItem);
         debugMenu.add(netItem);
+        debugMenu.addSeparator();
+        debugMenu.add(reportItem);
 
         menuBar.add(settingsMenu);
         menuBar.add(debugMenu);
