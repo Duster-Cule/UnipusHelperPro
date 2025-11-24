@@ -25,9 +25,9 @@ U校园AI版自动答题工具（新视野大学英语）
 |      多选题       | &#10060; |
 
 ## 使用方法
-请先确定你的计算机上已拥有Java 21及以上的Java环境。在命令行中输入`java -version`可以查看当前Java版本。
+请先确定你的计算机上已拥有 Java 25 及以上的 Java 环境。在命令行中输入`java -version`可以查看当前Java版本。
 
-在[Releases](https://github.com/Duster-Cule/UnipusHelperPro/releases/latest)中下载文件`UnipusHelperPro-v1.x.x.zip`并解压到任意目录，双击`UnipusHelperPro.exe`运行程序。
+在[Releases](https://github.com/Duster-Cule/UnipusHelperPro/releases/latest)中下载文件`UnipusHelperPro-v1.x.x.zip`并解压到任意目录，运行 `run.bat` (Windows) 或 `run.sh` (Linux，需要桌面环境) 以启动程序。
 
 按照程序内部提示进行操作，程序会自动获取答案并且提交。
 
