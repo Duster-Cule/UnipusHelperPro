@@ -302,25 +302,10 @@ public class Learn {
             for (int i = 0; i < course.getNode(taskId).getQuestion_num(); i++) {
                 Answer answer = Answer.getInstanceByJSON(answerString, i);
                 CourseDetail.Node.BaseType questionType = course.getQuestionType(taskId, i);
-                try {
-                    switch (questionType) {
-                        case MATERIAL_BANKED_CLOZE, SINGLE_CHOICE, SEQUENCE, BASIC_SCOOP_CONTENT, TRANSLATION,
-                             VIDEO_POPUP:
-                            answer.getQuestionAnswers().getChildren().forEach(e -> answers0.add(e.getAnswer().getFirst()));
-                            break;
-                        case SHORT_ANSWER:
-                            answer.getQuestionAnalysis().getChildren().forEach(e -> answers0.add(e.getAnalysis()));
-                            break;
-                        case WRITING:
-                            answers0.add(answer.getQuestionAnalysis().getAnalysis());
-                            break;
-                        case RICH_TEXT_READ, TEXT_LEARN, VIDEO_POINT_READ, VOCABULARY, INPUT:
-                            break;
-                        default:
-                            throw new IllegalStateException("Unexpected enum value: " + questionType);
-                    }
-                } catch (NullPointerException e) {
-                    logger.error("Something wrong when getting answer of task {} : {}, skipped, and you should report this to developer.", taskId, e.getMessage());
+                String failureReason = collectAnswersForQuestion(answer, questionType, answers0);
+                if (failureReason != null) {
+                    logger.warn("Unsupported answer format of task {} : [{}], skipped ({}).", taskId, questionType, failureReason);
+                    return false;
                 }
                 answers.add(answers0);
                 ids.add(answer.getId());
@@ -457,5 +442,75 @@ public class Learn {
             task.suspendTask();
         }
         return true;
+    }
+
+    /**
+     * Collects answers for supported question types.
+     *
+     * @return null if answers are successfully collected, otherwise a short failure reason.
+     */
+    private String collectAnswersForQuestion(Answer answer,
+                                             CourseDetail.Node.BaseType questionType,
+                                             List<String> answersOut) {
+        switch (questionType) {
+            case MATERIAL_BANKED_CLOZE, SINGLE_CHOICE, SEQUENCE, BASIC_SCOOP_CONTENT, TRANSLATION, VIDEO_POPUP -> {
+                Answer.AnswerContent content = answer.getQuestionAnswers();
+                if (content == null) {
+                    return "questionAnswers is null";
+                }
+                List<Answer.Answers> children = content.getChildren();
+                if (children == null || children.isEmpty()) {
+                    return "questionAnswers.children is empty";
+                }
+                for (Answer.Answers child : children) {
+                    if (child == null) {
+                        return "questionAnswers.children contains null";
+                    }
+                    List<String> rawAnswers = child.getAnswer();
+                    if (rawAnswers == null || rawAnswers.isEmpty()) {
+                        return "answers list is empty";
+                    }
+                    String choice = rawAnswers.getFirst();
+                    if (choice == null) {
+                        return "answers list contains null entry";
+                    }
+                    answersOut.add(choice);
+                }
+            }
+            case SHORT_ANSWER -> {
+                Answer.Analysis analysis = answer.getQuestionAnalysis();
+                if (analysis == null) {
+                    return "questionAnalysis is null";
+                }
+                List<Answer.ChildAnalysis> children = analysis.getChildren();
+                if (children == null || children.isEmpty()) {
+                    return "analysis.children is empty";
+                }
+                for (Answer.ChildAnalysis child : children) {
+                    if (child == null) {
+                        return "analysis.children contains null";
+                    }
+                    String text = child.getAnalysis();
+                    if (text == null) {
+                        return "analysis text is null";
+                    }
+                    answersOut.add(text);
+                }
+            }
+            case WRITING -> {
+                Answer.Analysis analysis = answer.getQuestionAnalysis();
+                if (analysis == null || analysis.getAnalysis() == null) {
+                    return "analysis text is missing";
+                }
+                answersOut.add(analysis.getAnalysis());
+            }
+            case RICH_TEXT_READ, TEXT_LEARN, VIDEO_POINT_READ, VOCABULARY, INPUT -> {
+                // No submission required, treat as success.
+            }
+            default -> {
+                return "unexpected question type: " + questionType;
+            }
+        }
+        return null;
     }
 }
