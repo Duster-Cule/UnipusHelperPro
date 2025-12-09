@@ -241,7 +241,7 @@ public class Learn {
         if (!checkpoint(task)) return false;
 
         List<Long> ids = new ArrayList<>();
-        List<List<String>> answers = new ArrayList<>();
+        List<List<List<String>>> answers = new ArrayList<>();
         List<CourseDetail.Node.BaseType> questionTypes;
 
         //检查题目是否可学习
@@ -268,7 +268,7 @@ public class Learn {
             return false;
         }
 
-        List<CourseDetail.Node.BaseType> typesNeedSkip = List.of(DISCUSSION, MULTI_FILE_UPLOAD, EXIT_TICKET, MULTICHOICE, UNKNOWN);
+        List<CourseDetail.Node.BaseType> typesNeedSkip = List.of(DISCUSSION, MULTI_FILE_UPLOAD, EXIT_TICKET, UNKNOWN);
 
         if (!Collections.disjoint(questionTypes, typesNeedSkip)) {
             logger.info("Unsupported question type of task {} : {}, skipped.", taskId, Arrays.toString(questionTypes.toArray()));
@@ -277,7 +277,7 @@ public class Learn {
 
         //获取答案
         if (!new HashSet<>(CourseDetail.PRESET_MODES).containsAll(questionTypes)) {
-            List<String> answers0 = new ArrayList<>();
+            List<List<String>> answers0 = new ArrayList<>();
             if (!checkpoint(task)) return false;
             Response answerRes = request.getAnswer(courseInstanceId, taskId, task.getUser().getOpenId());
             if (!checkpoint(task)) return false;
@@ -304,15 +304,15 @@ public class Learn {
                 CourseDetail.Node.BaseType questionType = course.getQuestionType(taskId, i);
                 try {
                     switch (questionType) {
-                        case MATERIAL_BANKED_CLOZE, SINGLE_CHOICE, SEQUENCE, BASIC_SCOOP_CONTENT, TRANSLATION,
+                        case MATERIAL_BANKED_CLOZE, SINGLE_CHOICE, MULTICHOICE, SEQUENCE, BASIC_SCOOP_CONTENT, BASIC_SCOOP_CONTENT_DROPDOWN, TRANSLATION,
                              VIDEO_POPUP:
-                            answer.getQuestionAnswers().getChildren().forEach(e -> answers0.add(e.getAnswer().getFirst()));
+                            answer.getQuestionAnswers().getChildren().forEach(e -> answers0.add(e.getAnswer()));
                             break;
                         case SHORT_ANSWER:
-                            answer.getQuestionAnalysis().getChildren().forEach(e -> answers0.add(e.getAnalysis()));
+                            answer.getQuestionAnalysis().getChildren().forEach(e -> answers0.add(List.of(e.getAnalysis())));
                             break;
                         case WRITING:
-                            answers0.add(answer.getQuestionAnalysis().getAnalysis());
+                            answers0.add(List.of(answer.getQuestionAnalysis().getAnalysis()));
                             break;
                         case RICH_TEXT_READ, TEXT_LEARN, VIDEO_POINT_READ, VOCABULARY, INPUT:
                             break;
@@ -327,7 +327,7 @@ public class Learn {
             }
         } else {
             for (int i = 0; i < course.getNode(taskId).getQuestion_num(); i++) {
-                answers.add(new ArrayList<String>());
+                answers.add(new ArrayList<>());
                 ids.add(0L);
             }
         }
