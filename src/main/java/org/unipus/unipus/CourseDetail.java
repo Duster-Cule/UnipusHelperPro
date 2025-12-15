@@ -16,7 +16,7 @@ import static org.unipus.util.JSONParsing.*;
 
 public class CourseDetail {
 
-    public static final List<CourseDetail.Node.BaseType> INVALID_TYPES = List.of(DISCUSSION, MULTI_FILE_UPLOAD, EXIT_TICKET, MULTICHOICE, UNKNOWN);
+    public static final List<CourseDetail.Node.BaseType> INVALID_TYPES = List.of(DISCUSSION, MULTI_FILE_UPLOAD, EXIT_TICKET, UNKNOWN);
     public static final List<CourseDetail.Node.BaseType> STUDY_MODES = List.of(RICH_TEXT_READ, TEXT_LEARN, VIDEO_POPUP, VOCABULARY, DISCUSSION, INPUT, VIDEO_POINT_READ);
     public static final List<CourseDetail.Node.BaseType> PRESET_MODES = List.of(RICH_TEXT_READ, TEXT_LEARN, VOCABULARY, INPUT, VIDEO_POINT_READ);
 
@@ -231,6 +231,7 @@ public class CourseDetail {
             VOCABULARY("vocabulary"),
             SEQUENCE("sequence"),
             BASIC_SCOOP_CONTENT("basic-scoop-content"),
+            BASIC_SCOOP_CONTENT_DROPDOWN("basic-scoop-content-dropdown"),
             VIDEO_POPUP("video-popup"),
             WRITING("writing"),
             MULTI_FILE_UPLOAD("multiFileUpload"), // 原始为驼峰
