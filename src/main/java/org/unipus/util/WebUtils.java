@@ -16,11 +16,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import static org.unipus.unipus.CourseDetail.*;
-import static org.unipus.unipus.CourseDetail.Node.BaseType.*;
-import static org.unipus.unipus.CourseDetail.Node.BaseType.RICH_TEXT_READ;
-import static org.unipus.unipus.CourseDetail.Node.BaseType.TEXT_LEARN;
-import static org.unipus.unipus.CourseDetail.Node.BaseType.VIDEO_POPUP;
-import static org.unipus.unipus.CourseDetail.Node.BaseType.VOCABULARY;
 
 public class WebUtils {
 
@@ -66,7 +61,7 @@ public class WebUtils {
      * @param openId        openId
      * @return 提交请求的body内容
      */
-    public static String createSubmitBody(long instanceId, List<String> answers, String groupId, String courseId, String openId, @NotNull CourseDetail.Node.BaseType questionType) {
+    public static String createSubmitBody(long instanceId, List<List<String>> answers, String groupId, String courseId, String openId, @NotNull CourseDetail.Node.BaseType questionType) {
 
         if (INVALID_TYPES.contains(questionType)) {
             throw new IllegalArgumentException("Unsupported question type recieved : " + questionType);
@@ -96,17 +91,16 @@ public class WebUtils {
 
         answer.add("value", new JsonArray());
         JsonArray children = new JsonArray();
-        for (String answ : answers) {
-            answ = StringProcesser.processIlligalCharacter(StringProcesser.toPlainText(answ));
+        for (List<String> answ : answers) {
+            answ.replaceAll(e -> StringProcesser.processIlligalCharacter(StringProcesser.toPlainText(e)));
             JsonObject child = new JsonObject();
             JsonArray arr = new JsonArray();
-            arr.add(answ);
+            answ.forEach(arr::add);
             child.add("value", arr);
             child.addProperty("isDone", true);
             children.add(child);
 
             JsonObject thirdPartyJudge = new JsonObject();
-            String value = answ;
             JsonObject payload = new JsonObject();
             JsonArray payloads = new JsonArray();
             JsonObject recordDetail = new JsonObject();
@@ -115,7 +109,7 @@ public class WebUtils {
             recordDetail.addProperty("comment", "");
             payload.add("recordDetail", recordDetail);
             payloads.add(payload);
-            thirdPartyJudge.addProperty("value", value);
+            thirdPartyJudge.addProperty("value", String.join(",", answ));
             thirdPartyJudge.addProperty("question_type", "basic");
             thirdPartyJudge.add("payloads", payloads);
 
@@ -161,7 +155,7 @@ public class WebUtils {
      * @return JSON字符串
      */
     public static String createSubmitBody(List<Long> instanceId,
-                                          List<List<String>> answers,
+                                          List<List<List<String>>> answers,
                                           String groupId,
                                           String courseId,
                                           String openId,
@@ -177,7 +171,7 @@ public class WebUtils {
         if (n == 1) return createSubmitBody(instanceId.getFirst(), answers.getFirst(), groupId, courseId, openId, questionTypes.getFirst());
 
         // 规格化输入
-        List<List<String>> safeAnswers = new ArrayList<>(n);
+        List<List<List<String>>> safeAnswers = new ArrayList<>(n);
         if (answers == null) {
             for (int i = 0; i < n; i++) safeAnswers.add(Collections.emptyList());
         } else {
@@ -222,7 +216,7 @@ public class WebUtils {
         // 逐题构建 quesDatas
         for (int i = 0; i < n; i++) {
             String qid = String.valueOf(instanceId.get(i));
-            List<String> ans = safeAnswers.get(i);
+            List<List<String>> ans = safeAnswers.get(i);
             CourseDetail.Node.BaseType qType = safeTypes.get(i);
 
             // 内层 answer（字符串化）
@@ -232,10 +226,10 @@ public class WebUtils {
             String contextStr = GSON.toJson(Collections.singletonMap("state", "submitted"));
 
             // children 同时驱动 isCompleted & thirdPartyJudges
-            for (String v : ans) {
+            for (List<String> v : ans) {
                 isCompleted.add(true);
                 Map<String, Object> judge = new LinkedHashMap<>();
-                judge.put("value", v);
+                judge.put("value", String.join(",", v));
                 judge.put("question_type", mapQuestionType(qType));
                 judge.put("reply_type", mapReplyType(qType));
                 Map<String, Object> versions = new LinkedHashMap<>();
@@ -345,9 +339,9 @@ public class WebUtils {
         return submitInfo;
     }
 
-    private static String buildInnerAnswerString(List<String> ans, boolean fullRight) {
+    private static String buildInnerAnswerString(List<List<String>> ans, boolean fullRight) {
         List<Map<String, Object>> children = new ArrayList<>(ans.size());
-        for (String v : ans) {
+        for (List<String> v : ans) {
             Map<String, Object> child = new LinkedHashMap<>();
             child.put("value", Collections.singletonList(v));
             child.put("isDone", true);
